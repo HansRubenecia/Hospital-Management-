@@ -14,3 +14,7 @@ pano i run sa vscode
 * py manage.py runserver
 
 trello link https://trello.com/invite/hci209/ATTI2b37ce60dc2754e24375837351c5e6fe0F9DA3A9 # dito nakalagay mga task natin 
+# pag may changes kayo dun kayo sa branch niyo mag commit 
+* git add .'
+* git commit -m
+* git push (*dun sa branch name niyo*)
