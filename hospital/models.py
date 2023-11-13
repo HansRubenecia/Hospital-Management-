@@ -77,4 +77,4 @@ class PatientDischargeDetails(models.Model):
     total=models.PositiveIntegerField(null=False)
 
 
-s
+
