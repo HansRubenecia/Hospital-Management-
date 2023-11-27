@@ -682,27 +682,23 @@ def doctor_view_treatment_view(request):
 @user_passes_test(is_doctor)
 def doctor_add_treatment_view(request):
     doctor = models.Doctor.objects.get(user_id=request.user.id)
-    treatment_form = forms.TreatmentForm()
-    mydict = {'treatment_form': treatment_form, 'doctor' : doctor}
 
     if request.method == 'POST':
-        treatment_form = forms.TreatmentForm(request.POST)
+        treatment_form = forms.TreatmentForm(request.POST, user=request.user)
 
         if treatment_form.is_valid():
-            doctor = models.Doctor.objects.get(user_id=request.user.id)
             treatment = treatment_form.save(commit=False)
-
-            treatment.doctorId = doctor.user_id  # Update this line
+            treatment.doctorId = doctor.user_id
             treatment.patientId = request.POST.get('patientId')
-
-            # Assuming User model has a 'first_name' field
             treatment.doctorName = models.User.objects.get(id=request.user.id).first_name
             treatment.patientName = models.User.objects.get(id=request.POST.get('patientId')).first_name
-
             treatment.status = True
             treatment.save()
-
             return HttpResponseRedirect('doctor-view-treatment')
+    else:
+        treatment_form = forms.TreatmentForm(user=request.user)
+
+    mydict = {'treatment_form': treatment_form, 'doctor': doctor}
 
     return render(request, 'hospital/doctor_add_treatment.html', context=mydict)
 

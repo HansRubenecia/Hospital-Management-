@@ -64,14 +64,27 @@ class PatientAppointmentForm(forms.ModelForm):
 
 # Add a new form for treatment
 class TreatmentForm(forms.ModelForm):
-    doctorId = forms.ModelChoiceField(queryset=models.Doctor.objects.all().filter(status=True),
-                                      empty_label="Doctor Name and Department", to_field_name="user_id")
-    patientId = forms.ModelChoiceField(queryset=models.Patient.objects.all().filter(status=True),
-                                       empty_label="Patient Name and Symptoms", to_field_name="user_id")
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(TreatmentForm, self).__init__(*args, **kwargs)
+
+        if user:
+            self.fields['doctorId'].queryset = models.Doctor.objects.filter(user_id=user)
+            self.fields['patientId'].queryset = models.Patient.objects.filter(assignedDoctorId=user.id)
+
+
+    doctorId = forms.ModelChoiceField(
+        queryset=models.Doctor.objects.none(),
+        empty_label="Doctor Name and Department", to_field_name="user_id"
+    )
+    patientId = forms.ModelChoiceField(
+        queryset=models.Patient.objects.none(),
+        empty_label="Patient Name and Symptoms", to_field_name="user_id"
+    )
+
     class Meta:
         model = models.Treatment
         fields = ['description', 'status']
-
 
 class ContactusForm(forms.Form):
     Name = forms.CharField(max_length=30)
