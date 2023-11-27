@@ -57,6 +57,15 @@ class Appointment(models.Model):
     status=models.BooleanField(default=False)
 
 
+class Treatment(models.Model):
+    patientId = models.PositiveIntegerField(null=True)
+    doctorId = models.PositiveIntegerField(null=True)
+    patientName = models.CharField(max_length=40, null=True)
+    doctorName = models.CharField(max_length=40, null=True)
+    treatmentDate = models.DateField(auto_now=True)
+    description = models.TextField(max_length=500)
+    status = models.BooleanField(default=False)
+
 
 class PatientDischargeDetails(models.Model):
     patientId=models.PositiveIntegerField(null=True)

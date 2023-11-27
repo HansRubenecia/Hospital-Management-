@@ -62,8 +62,17 @@ class PatientAppointmentForm(forms.ModelForm):
         model=models.Appointment
         fields=['description','status']
 
+# Add a new form for treatment
+class TreatmentForm(forms.ModelForm):
+    doctorId = forms.ModelChoiceField(queryset=models.Doctor.objects.all().filter(status=True),
+                                      empty_label="Doctor Name and Department", to_field_name="user_id")
+    patientId = forms.ModelChoiceField(queryset=models.Patient.objects.all().filter(status=True),
+                                       empty_label="Patient Name and Symptoms", to_field_name="user_id")
+    class Meta:
+        model = models.Treatment
+        fields = ['description', 'status']
 
-#for contact us page
+
 class ContactusForm(forms.Form):
     Name = forms.CharField(max_length=30)
     Email = forms.EmailField()

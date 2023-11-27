@@ -497,12 +497,17 @@ def admin_appointment_view(request):
     return render(request,'hospital/admin_appointment.html')
 
 
-
 @login_required(login_url='adminlogin')
 @user_passes_test(is_admin)
 def admin_view_appointment_view(request):
     appointments=models.Appointment.objects.all().filter(status=True)
     return render(request,'hospital/admin_view_appointment.html',{'appointments':appointments})
+
+@login_required(login_url='adminlogin')
+@user_passes_test(is_admin)
+def admin_view_treatment_view(request):
+    appointments=models.Appointment.objects.all().filter(status=True)
+    return render(request,'hospital/admin_view_treatment.html',{'appointments':appointments})
 
 
 
@@ -649,7 +654,57 @@ def doctor_view_appointment_view(request):
     appointments=zip(appointments,patients)
     return render(request,'hospital/doctor_view_appointment.html',{'appointments':appointments,'doctor':doctor})
 
+# Add views for treatment
+@login_required(login_url='doctorlogin')
+@user_passes_test(is_doctor)
+def doctor_view_treatment_view(request):
+    doctor = models.Doctor.objects.get(user_id=request.user.id)
+    treatments = models.Treatment.objects.filter(status=True, doctorId=request.user.id)
+    treatments_by_patient = {}
 
+    for treatment in treatments:
+        if treatment.patientId not in treatments_by_patient:
+            treatments_by_patient[treatment.patientId] = []
+        treatments_by_patient[treatment.patientId].append(treatment)
+
+    patients = models.Patient.objects.filter(status=True, user_id__in=treatments_by_patient.keys())
+
+    treatments_with_patients = []
+    for patient in patients:
+        treatments_for_patient = treatments_by_patient.get(patient.user_id, [])
+        treatments_with_patients.extend(zip(treatments_for_patient, [patient] * len(treatments_for_patient)))
+
+    return render(request, 'hospital/doctor_view_treatment.html',
+                  {'treatments_with_patients': treatments_with_patients, 'doctor': doctor})
+
+
+@login_required(login_url='doctorlogin')
+@user_passes_test(is_doctor)
+def doctor_add_treatment_view(request):
+    doctor = models.Doctor.objects.get(user_id=request.user.id)
+    treatment_form = forms.TreatmentForm()
+    mydict = {'treatment_form': treatment_form, 'doctor' : doctor}
+
+    if request.method == 'POST':
+        treatment_form = forms.TreatmentForm(request.POST)
+
+        if treatment_form.is_valid():
+            doctor = models.Doctor.objects.get(user_id=request.user.id)
+            treatment = treatment_form.save(commit=False)
+
+            treatment.doctorId = doctor.user_id  # Update this line
+            treatment.patientId = request.POST.get('patientId')
+
+            # Assuming User model has a 'first_name' field
+            treatment.doctorName = models.User.objects.get(id=request.user.id).first_name
+            treatment.patientName = models.User.objects.get(id=request.POST.get('patientId')).first_name
+
+            treatment.status = True
+            treatment.save()
+
+            return HttpResponseRedirect('doctor-view-treatment')
+
+    return render(request, 'hospital/doctor_add_treatment.html', context=mydict)
 
 @login_required(login_url='doctorlogin')
 @user_passes_test(is_doctor)
@@ -733,7 +788,7 @@ def patient_book_appointment_view(request):
             desc=request.POST.get('description')
 
             doctor=models.Doctor.objects.get(user_id=request.POST.get('doctorId'))
-            
+
             appointment=appointmentForm.save(commit=False)
             appointment.doctorId=request.POST.get('doctorId')
             appointment.patientId=request.user.id #----user can choose any patient but only their info will be stored
